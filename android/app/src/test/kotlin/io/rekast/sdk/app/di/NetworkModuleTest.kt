@@ -58,7 +58,7 @@ class NetworkModuleTest {
 
     private val httpConfig =
         ApiConfig(
-            baseUrl = "http://10.0.2.2:8080/",
+            baseUrl = "https://10.0.2.2:8443/",
             apiUserId = "user-id",
             environment = "sandbox",
             allowInsecureTls = true
@@ -118,13 +118,12 @@ class NetworkModuleTest {
             )
         assertNotNull(client)
 
-        // Verify it is not the unsafe client by asserting the hostname verifier does not trust everything
-        val isUnsafe =
-            try {
-                client.hostnameVerifier.verify("any-hostname.example.com", null)
-            } catch (e: NullPointerException) {
-                false
+        // Verify it is not the unsafe client by asserting the hostname verifier does not trust arbitrary hostnames
+        val mockSession =
+            mockk<javax.net.ssl.SSLSession> {
+                io.mockk.every { peerCertificates } throws javax.net.ssl.SSLPeerUnverifiedException("Unverified")
             }
+        val isUnsafe = client.hostnameVerifier.verify("any-hostname.example.com", mockSession)
         org.junit.Assert.assertFalse(isUnsafe)
     }
 

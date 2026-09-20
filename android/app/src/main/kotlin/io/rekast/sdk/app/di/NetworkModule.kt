@@ -157,6 +157,9 @@ object NetworkModule {
     ): OkHttpClient {
         val builder =
             if (config.allowInsecureTls) {
+                require(BuildConfig.DEBUG) {
+                    "allowInsecureTls must only be enabled in DEBUG builds to prevent security vulnerabilities."
+                }
                 UnsafeOkHttpClient().unsafeOkHttpClient
             } else {
                 OkHttpClient.Builder()
